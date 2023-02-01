@@ -11,12 +11,6 @@ import (
 	"net/http"
 )
 
-var (
-	errOnParseUsers         = errors.New("data parsing went wrong")
-	errOnLoadingUser        = errors.New("loading users went wrong")
-	errOnConvertUsersToJson = errors.New("converting users to JSON went wrong")
-)
-
 type clientPack struct {
 	client *http.Client
 	logger *logrus.Logger
@@ -30,19 +24,22 @@ func newClientPack(client *http.Client, logger *logrus.Logger, config *config.Co
 func (cp *clientPack) GetUsers() (Users, error) {
 	resp, err := cp.client.Get(fmt.Sprintf("%s/users", cp.config.ClientAddr))
 	if err != nil {
-		return nil, errOnLoadingUser
+		return nil, errors.New(cp.config.Messages.Errors.UnableToLoad)
 	}
 	defer resp.Body.Close()
 
 	data, err := cp.parseBody(resp)
+	if err != nil {
+		return nil, errors.New(cp.config.Messages.Errors.UnableToParse)
+	}
 
-	return data, err
+	return data, nil
 }
 
 func (cp *clientPack) CreateUser(u User) error {
 	user, err := json.Marshal(u)
 	if err != nil {
-		return errOnConvertUsersToJson
+		return errors.New(cp.config.Messages.Errors.UnableToConvert)
 	}
 
 	postData := bytes.NewBuffer(user)
@@ -51,11 +48,10 @@ func (cp *clientPack) CreateUser(u User) error {
 		return err
 	}
 
-	created, err := cp.client.Do(req)
+	_, err = cp.client.Do(req)
 	if err != nil {
-		return err
+		return errors.New(cp.config.Messages.Errors.SomethingWentWrong)
 	}
-	fmt.Println("created", created)
 	return nil
 }
 
@@ -68,7 +64,7 @@ func (cp *clientPack) parseBody(data *http.Response) (Users, error) {
 
 	var parsedBody Users
 	if err := json.Unmarshal(body, &parsedBody); err != nil {
-		return nil, errOnParseUsers
+		return nil, errors.New(cp.config.Messages.Errors.UnableToParse)
 	}
 	return parsedBody, nil
 }
@@ -80,7 +76,6 @@ func (cp *clientPack) makePrivateRequest(method, url string, body io.Reader) (*h
 		return nil, err
 	}
 	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", cp.config.PrimaryToken))
-	//Allow CORS here By * or specific origin
-	req.Header.Set("Access-Control-Allow-Origin", "*")
+	req.Header.Add("Content-Type", "application/json")
 	return req, nil
 }

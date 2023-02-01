@@ -1,1 +1,8 @@
 client_addr: "https://gorest.co.in/public/v2"
+
+messages:
+  errors:
+    unable_to_load: "data loading went wrong"
+    unable_to_parse: "data parsing went wrong"
+    unable_to_convert: "data converting went wrong"
+    something_went_wrong: "oops! internal server error. something went wrong"

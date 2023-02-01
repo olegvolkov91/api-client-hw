@@ -12,6 +12,19 @@ const pk string = "PRIMARY_TOKEN"
 type Config struct {
 	PrimaryToken string
 	ClientAddr   string `mapstructure:"client_addr"`
+
+	Messages
+}
+
+type Messages struct {
+	Errors
+}
+
+type Errors struct {
+	UnableToLoad       string `mapstructure:"unable_to_load"`
+	UnableToParse      string `mapstructure:"unable_to_parse"`
+	UnableToConvert    string `mapstructure:"unable_to_convert"`
+	SomethingWentWrong string `mapstructure:"something_went_wrong"`
 }
 
 func Init() (*Config, error) {
@@ -27,6 +40,10 @@ func Init() (*Config, error) {
 
 	var cfg Config
 	if err := viper.Unmarshal(&cfg); err != nil {
+		return nil, err
+	}
+
+	if err := viper.UnmarshalKey("messages.errors", &cfg.Messages.Errors); err != nil {
 		return nil, err
 	}
 
