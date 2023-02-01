@@ -14,23 +14,41 @@ const (
 func main() {
 	cfg, err := config.Init()
 
+	fmt.Println("CONFIG", cfg)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	newCl := apiclient.Start(cfg)
 
-	u, err := newCl.GetUsers()
-	if err != nil {
+	//users, err := newCl.GetUsers()
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
+	//
+	//women := users.FilterByGender(female)
+	//if women == nil {
+	//	log.Fatal("no users found")
+	//}
+	//
+	//for _, woman := range women {
+	//	fmt.Printf("Name: %s\nEmail: %s\nGender: %s\n\n", woman.Name, woman.Email, woman.Gender)
+	//}
+
+	//newCl.CreateUser(apiclient.User{
+	//	Name:   "oleg",
+	//	Email:  "oleg@i.ua",
+	//	Gender: "male",
+	//	Status: "active",
+	//})
+
+	if err := newCl.CreateUser(apiclient.User{
+		Name:   "olejka",
+		Email:  "olejka@i.ua",
+		Gender: "female",
+		Status: "inactive",
+	}); err != nil {
 		log.Fatal(err)
 	}
 
-	users := u.FilterByGender(female)
-	if users == nil {
-		log.Fatal("no users found")
-	}
-
-	for _, woman := range users[female] {
-		fmt.Printf("Name: %s\nEmail: %s\nStatus: %s\n\n", woman.Name, woman.Email, woman.Status)
-	}
 }

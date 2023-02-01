@@ -1,6 +1,7 @@
 package apiclient
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -8,12 +9,12 @@ import (
 	"github.com/sirupsen/logrus"
 	"io"
 	"net/http"
-	"time"
 )
 
 var (
-	errOnParseUsers  = errors.New("users parsing went wrong")
-	errOnLoadingUser = errors.New("loading users went wrong")
+	errOnParseUsers         = errors.New("data parsing went wrong")
+	errOnLoadingUser        = errors.New("loading users went wrong")
+	errOnConvertUsersToJson = errors.New("converting users to JSON went wrong")
 )
 
 type clientPack struct {
@@ -27,26 +28,59 @@ func newClientPack(client *http.Client, logger *logrus.Logger, config *config.Co
 }
 
 func (cp *clientPack) GetUsers() (Users, error) {
-	start := time.Now()
-	cp.logger.Info("Users loading process has been started ...")
-	defer cp.logger.Infof("Users are loaded in %v", time.Now().Sub(start))
 	resp, err := cp.client.Get(fmt.Sprintf("%s/users", cp.config.ClientAddr))
-
 	if err != nil {
 		return nil, errOnLoadingUser
 	}
 	defer resp.Body.Close()
 
-	var users []User
+	data, err := cp.parseBody(resp)
 
-	body, err := io.ReadAll(resp.Body)
+	return data, err
+}
+
+func (cp *clientPack) CreateUser(u User) error {
+	user, err := json.Marshal(u)
+	if err != nil {
+		return errOnConvertUsersToJson
+	}
+
+	postData := bytes.NewBuffer(user)
+	req, err := cp.makePrivateRequest(http.MethodPost, fmt.Sprintf("%s/users", cp.config.ClientAddr), postData)
+	if err != nil {
+		return err
+	}
+
+	created, err := cp.client.Do(req)
+	if err != nil {
+		return err
+	}
+	fmt.Println("created", created)
+	return nil
+}
+
+func (cp *clientPack) parseBody(data *http.Response) (Users, error) {
+	cp.logger.Info("Data is parsing now...")
+	body, err := io.ReadAll(data.Body)
 	if err != nil {
 		return nil, err
 	}
 
-	if err := json.Unmarshal(body, &users); err != nil {
+	var parsedBody Users
+	if err := json.Unmarshal(body, &parsedBody); err != nil {
 		return nil, errOnParseUsers
 	}
+	return parsedBody, nil
+}
 
-	return users, nil
+func (cp *clientPack) makePrivateRequest(method, url string, body io.Reader) (*http.Request, error) {
+	req, err := http.NewRequest(method, url, body)
+	cp.logger.Infof("\n\nMethod: %s, URL: %s, body: %s\n\n", req.Method, req.URL, req.Body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", cp.config.PrimaryToken))
+	//Allow CORS here By * or specific origin
+	req.Header.Set("Access-Control-Allow-Origin", "*")
+	return req, nil
 }

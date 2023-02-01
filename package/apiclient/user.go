@@ -3,22 +3,21 @@ package apiclient
 type Users []User
 
 type User struct {
-	Id     int    `json:"id"`
+	Id     int    `json:"id,omitempty"`
 	Name   string `json:"name"`
 	Email  string `json:"email"`
 	Gender string `json:"gender"`
 	Status string `json:"status"`
 }
 
-func (u Users) FilterByGender(gender string) map[string][]User {
-	var users map[string][]User = map[string][]User{
-		"male":   make([]User, 0),
-		"female": make([]User, 0),
-	}
+func (u Users) FilterByGender(gender string) []User {
+	var users []User
 
 	if len(u) != 0 {
 		for _, u := range u {
-			users[gender] = append(users[gender], u)
+			if u.Gender == gender {
+				users = append(users, u)
+			}
 		}
 		return users
 	}
