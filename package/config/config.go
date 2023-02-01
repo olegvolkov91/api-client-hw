@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 	"os"
@@ -25,6 +26,7 @@ type Errors struct {
 	UnableToParse      string `mapstructure:"unable_to_parse"`
 	UnableToConvert    string `mapstructure:"unable_to_convert"`
 	SomethingWentWrong string `mapstructure:"something_went_wrong"`
+	NotExistsInEnv     string `mapstructure:"not_exists_in_env"`
 }
 
 func Init() (*Config, error) {
@@ -58,7 +60,7 @@ func getEnv(cfg *Config) error {
 	token, exists := os.LookupEnv(pk)
 
 	if !exists {
-		return errors.New("primary token does not exist in .env file")
+		return errors.New(fmt.Sprintf("primary token - %s\n", cfg.Messages.Errors.NotExistsInEnv))
 	}
 	cfg.PrimaryToken = token
 	return nil

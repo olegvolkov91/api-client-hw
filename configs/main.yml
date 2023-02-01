@@ -5,4 +5,5 @@ messages:
     unable_to_load: "data loading went wrong"
     unable_to_parse: "data parsing went wrong"
     unable_to_convert: "data converting went wrong"
+    not_exists_in_env: "item doesn't exist in .env file"
     something_went_wrong: "oops! internal server error. something went wrong"
