@@ -25,7 +25,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	users := newCl.FilterByGender(u, female)
+	users := u.FilterByGender(female)
 	if users == nil {
 		log.Fatal("no users found")
 	}

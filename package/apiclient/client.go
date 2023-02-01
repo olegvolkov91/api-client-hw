@@ -26,7 +26,7 @@ func newClientPack(client *http.Client, logger *logrus.Logger, config *config.Co
 	return &clientPack{client, logger, config}
 }
 
-func (cp *clientPack) GetUsers() ([]User, error) {
+func (cp *clientPack) GetUsers() (Users, error) {
 	start := time.Now()
 	cp.logger.Info("Users loading process has been started ...")
 	defer cp.logger.Infof("Users are loaded in %v", time.Now().Sub(start))
@@ -49,19 +49,4 @@ func (cp *clientPack) GetUsers() ([]User, error) {
 	}
 
 	return users, nil
-}
-
-func (cp *clientPack) FilterByGender(data []User, gender string) map[string][]User {
-	var users map[string][]User = map[string][]User{
-		"male":   make([]User, 0),
-		"female": make([]User, 0),
-	}
-
-	if len(data) != 0 {
-		for _, u := range data {
-			users[gender] = append(users[gender], u)
-		}
-		return users
-	}
-	return nil
 }
